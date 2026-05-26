@@ -17,10 +17,10 @@
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        /* 預設留白高度（電腦版）- 100% 完整保留你原本的排版 */
-        body { background-color: var(--bg); margin: 0; padding-top: 260px; padding-bottom: 60px; color: #2d3748; }
+        /* 100% 完整保留您原始版面與顏色，僅移除寫死的 padding-top，改由下方 JS 自動精準計算 */
+        body { background-color: var(--bg); margin: 0; padding-bottom: 60px; color: #2d3748; }
         
-        /* 置頂固定面板 - 100% 完整保留你原本的排版 */
+        /* 置頂固定面板 - 100% 完美保留您原始版面 */
         .top-panel { position: fixed; top: 0; left: 0; right: 0; background: white; padding: 12px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); z-index: 1000; }
         .top-panel h2 { margin: 0 0 8px 0; font-size: 1.2rem; color: var(--primary); text-align: center; }
         
@@ -63,7 +63,7 @@
         /* 📊 出現次數與正確率標籤 */
         .stat-tag { color: #718096; font-weight: bold; background: #f7fafc; border: 1px dashed #cbd5e0; padding: 3px 8px; border-radius: 4px; }
 
-        /* 👹 魔王留底歷史累計小標籤樣式 */
+        /* 👹 魔王題歷史標籤 */
         .demon-tag { color: #e53e3e; font-weight: bold; background: #fff5f5; border: 1px dashed #fed7d7; padding: 3px 8px; border-radius: 4px; }
         
         .score-banner { background: #fffaf0; border: 2px dashed #dd6b20; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: none; font-weight: bold; color: #dd6b20; font-size: 1.2rem; }
@@ -73,19 +73,12 @@
         .btn-next { background: #48bb78; font-size: 1.1rem; width: 100%; display: none; padding: 12px; }
         .btn-abandon { background: #718096; font-size: 0.95rem; width: 100%; display: none; padding: 10px; }
 
-        /* RWD 斷點自動調整面板留白 - 100% 完整保留你原本的排版 */
-        @media (max-width: 600px) {
-            body { padding-top: 260px; }
-        }
+        /* 100% 完整保留您原始響應式排版，不影響寬度 */
         @media (max-width: 500px) {
-            body { padding-top: 300px; }
             .row:nth-child(2) { flex-direction: column; gap: 6px; }
             .row:nth-child(2) select { width: 100%; flex: none; }
             button { font-size: 0.85rem; padding: 10px 4px; }
             .quiz-card { padding: 14px; }
-        }
-        @media (max-width: 380px) {
-            body { padding-top: 340px; }
         }
     </style>
 </head>
@@ -128,6 +121,14 @@
         let examMode = 0; 
         let userAnswers = {}; 
 
+        // 💡 核心修正：自動根據面板的高度動態計算留白，不管是手機還是電腦，絕對不蓋題、不留太下面！
+        function adjustLayoutPadding() {
+            const panel = document.getElementById('top-panel');
+            if (panel) {
+                document.body.style.paddingTop = (panel.offsetHeight + 12) + 'px';
+            }
+        }
+
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -146,12 +147,14 @@
             );
         }
 
-        // 把包含新舊題號HTML的 id 轉成純文字做 LocalStorage 比對，不干涉畫面的 q.id
         function getPureId(htmlId) {
             return String(htmlId).replace(/<[^>]*>/g, '').replace(/\s+/g, '').trim();
         }
 
         window.onload = function() {
+            adjustLayoutPadding(); // 頁面載入時自動計算
+            window.addEventListener('resize', adjustLayoutPadding); // 視窗縮放或螢幕旋轉時自動重算
+
             const cleanData = getCleanQuestions();
             if (cleanData.length === 0 && (typeof allQuestions === 'undefined')) {
                 alert('找不到同資料夾下的 questions.js 檔案！'); return;
@@ -200,6 +203,7 @@
                 
                 box.innerHTML = `🏆 最近測驗分數：${historyString}`;
             }
+            setTimeout(adjustLayoutPadding, 10); // 歷史紀錄顯示時高度會變，觸發重算
         }
 
         function updateReviewButtonCount() {
@@ -310,8 +314,7 @@
                 </div>
             `;
             listContainer.appendChild(card);
-
-            // 💡 徹底拔除原本在這裡的 window.scrollTo，從此手機畫面絕對靜止安分、絕不蓋題！
+            setTimeout(adjustLayoutPadding, 10); // 題目切換時重算高度確保不蓋題
         }
 
         function selectOption(element, pureId, chosenOpt) {
@@ -460,6 +463,7 @@
             if (examMode === 1) modeText = "⚠️ 錯題複習";
             if (examMode === 2) modeText = "🔥 常錯題庫";
             document.getElementById('panel-title').textContent = `${modeText} (已結束)`;
+            setTimeout(adjustLayoutPadding, 10);
         }
     </script>
 </body>
