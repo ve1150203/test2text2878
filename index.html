@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>線上模擬測驗 - 終極魔王題庫版</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --success-bg: #e6fffa;
+            --success-border: #319795;
+            --success-text: #234e52;
+            --error-bg: #fff5f5;
+            --error-border: #e53e3e;
+            --error-text: #9b2c2c;
+            --bg: #f7fafc;
+        }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        
+        /* 預設留白高度（電腦版）- 100% 完整保留你原本的排版 */
+        body { background-color: var(--bg); margin: 0; padding-top: 260px; padding-bottom: 60px; color: #2d3748; }
+        
+        /* 置頂固定面板 - 100% 完整保留你原本的排版 */
+        .top-panel { position: fixed; top: 0; left: 0; right: 0; background: white; padding: 12px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); z-index: 1000; }
+        .top-panel h2 { margin: 0 0 8px 0; font-size: 1.2rem; color: var(--primary); text-align: center; }
+        
+        .row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+        select, button, input { padding: 10px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.95rem; font-weight: bold; width: 100%; }
+        select { background: white; flex: 1; min-width: 0; } 
+        button { background: var(--primary); color: white; border: none; cursor: pointer; }
+        button:active { opacity: 0.8; }
+        
+        .btn-start { background: #319795; flex: 1; }
+        .btn-review { background: #b7791f; flex: 1; }
+        .btn-heavy-wrong { background: #e53e3e; flex: 1; }
+        
+        /* 歷史分數紀錄區 */
+        .history-box { display: none; font-size: 0.82rem; background: #edf2f7; padding: 6px 10px; border-radius: 6px; text-align: center; font-weight: 500; color: #4a5568; line-height: 1.4; margin-top: 5px; word-break: break-all; }
+
+        /* 題目列表區 */
+        .container { max-width: 600px; margin: 0 auto; padding: 0 10px; }
+        .quiz-card { background: white; padding: 18px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-left: 4px solid #cbd5e0; }
+        
+        .q-title { font-size: 1.05rem; margin-bottom: 15px; line-height: 1.5; color: #2d3748; font-weight: 500; }
+        .q-num { font-size: 1.25rem; font-weight: 800; color: #1a365d; margin-right: 6px; display: inline-block; }
+        
+        /* 選項按鈕樣式 */
+        .option-label { display: block; font-size: 0.95rem; margin: 8px 0; padding: 12px 15px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; background: #fff; transition: background 0.15s; }
+        .option-label:hover { background: #f7fafc; }
+        
+        /* 鎖定點擊狀態 */
+        .quiz-card.answered .option-label { pointer-events: none; }
+        
+        /* 答對與答錯的顏色樣式 */
+        .option-label.correct-target { background-color: var(--success-bg) !important; color: var(--success-text) !important; font-weight: bold; border: 1px solid var(--success-border) !important; }
+        .option-label.wrong-target { background-color: var(--error-bg) !important; color: var(--error-text) !important; border: 1px solid var(--error-border) !important; }
+
+        /* 下方資訊標籤列 */
+        .card-footer { display: flex; justify-content: flex-end; gap: 8px; align-items: center; margin-top: 15px; font-size: 0.8rem; color: #a0aec0; flex-wrap: wrap; }
+        .course-tag { color: #718096; background: #edf2f7; padding: 3px 8px; border-radius: 4px; font-weight: normal; }
+        .orig-id { color: #a0aec0; font-weight: bold; }
+        
+        /* 📊 出現次數與正確率標籤 */
+        .stat-tag { color: #718096; font-weight: bold; background: #f7fafc; border: 1px dashed #cbd5e0; padding: 3px 8px; border-radius: 4px; }
+
+        /* 👹 魔王留底歷史累計小標籤樣式 */
+        .demon-tag { color: #e53e3e; font-weight: bold; background: #fff5f5; border: 1px dashed #fed7d7; padding: 3px 8px; border-radius: 4px; }
+        
+        .score-banner { background: #fffaf0; border: 2px dashed #dd6b20; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: none; font-weight: bold; color: #dd6b20; font-size: 1.2rem; }
+        
+        /* 控制按鈕區 */
+        .control-row { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; padding-bottom: 30px; }
+        .btn-next { background: #48bb78; font-size: 1.1rem; width: 100%; display: none; padding: 12px; }
+        .btn-abandon { background: #718096; font-size: 0.95rem; width: 100%; display: none; padding: 10px; }
+
+        /* RWD 斷點自動調整面板留白 - 100% 完整保留你原本的排版 */
+        @media (max-width: 600px) {
+            body { padding-top: 260px; }
+        }
+        @media (max-width: 500px) {
+            body { padding-top: 300px; }
+            .row:nth-child(2) { flex-direction: column; gap: 6px; }
+            .row:nth-child(2) select { width: 100%; flex: none; }
+            button { font-size: 0.85rem; padding: 10px 4px; }
+            .quiz-card { padding: 14px; }
+        }
+        @media (max-width: 380px) {
+            body { padding-top: 340px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-panel" id="top-panel">
+        <h2 id="panel-title">📝 線上模擬測驗</h2>
+        <div class="row">
+            <select id="course-select"><option value="all">全部課程 (載入中...)</option></select>
+            <select id="amount-select">
+                <option value="30">隨機 30 題</option>
+                <option value="50">隨機 50 題</option>
+                <option value="100">隨機 100 題</option>
+                <option value="all_pool">🔄 全部隨機隨機考</option>
+            </select>
+        </div>
+        <div class="row">
+            <button class="btn-start" onclick="startExam(0)">🚀 開始測驗</button>
+            <button id="review-nav-btn" class="btn-review" onclick="startExam(1)">⚠️ 錯題複習 (0)</button>
+            <button id="heavy-nav-btn" class="btn-heavy-wrong" onclick="startExam(2)">🔥 常錯題庫 (0)</button>
+        </div>
+        <div class="history-box" id="history-box"></div>
+    </div>
+
+    <div class="container">
+        <div id="score-banner" class="score-banner"></div>
+        <div id="quiz-list"></div>
+        
+        <div class="control-row">
+            <button id="next-btn" class="btn-next" onclick="nextQuestion()">➡️ 下一題</button>
+            <button id="abandon-btn" class="btn-abandon" onclick="submitExam(true)">🏳️ 放棄此挑戰 (提前結算)</button>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+
+    <script>
+        let examQuestions = []; 
+        let currentQuestionIndex = 0; 
+        let examMode = 0; 
+        let userAnswers = {}; 
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function getCleanQuestions() {
+            if (typeof allQuestions === 'undefined') return [];
+            return allQuestions.filter(q => 
+                q.id && q.title && 
+                !String(q.id).includes("序號") && 
+                !String(q.title).includes("題目") &&
+                !String(q.course).includes("課程名稱")
+            );
+        }
+
+        // 把包含新舊題號HTML的 id 轉成純文字做 LocalStorage 比對，不干涉畫面的 q.id
+        function getPureId(htmlId) {
+            return String(htmlId).replace(/<[^>]*>/g, '').replace(/\s+/g, '').trim();
+        }
+
+        window.onload = function() {
+            const cleanData = getCleanQuestions();
+            if (cleanData.length === 0 && (typeof allQuestions === 'undefined')) {
+                alert('找不到同資料夾下的 questions.js 檔案！'); return;
+            }
+            
+            const courseCounts = {};
+            cleanData.forEach(q => {
+                if (q.course) {
+                    const cName = q.course.trim();
+                    courseCounts[cName] = (courseCounts[cName] || 0) + 1;
+                }
+            });
+
+            const courses = [...new Set(cleanData.map(q => q.course && q.course.trim()).filter(Boolean))];
+            const select = document.getElementById('course-select');
+            select.innerHTML = `<option value="all">全部課程 (${cleanData.length}題)</option>`;
+            
+            courses.forEach(c => { 
+                const opt = document.createElement('option'); 
+                opt.value = c; 
+                opt.textContent = `${c} (${courseCounts[c]}題)`; 
+                select.appendChild(opt); 
+            });
+
+            sanitizeOldHistory();
+            updateReviewButtonCount();
+        };
+
+        function sanitizeOldHistory() {
+            let history = JSON.parse(localStorage.getItem('quiz_history')) || [];
+            let needClean = history.some(h => !h || h.score === undefined || h.course === "undefined" || String(h.score).includes('undefined') || String(h.course).includes('undefined'));
+            if (needClean) { localStorage.removeItem('quiz_history'); }
+        }
+
+        function updateHistoryUI() {
+            const history = JSON.parse(localStorage.getItem('quiz_history')) || [];
+            const box = document.getElementById('history-box');
+            
+            if (history.length === 0) {
+                box.style.display = 'none'; 
+            } else {
+                box.style.display = 'block'; 
+                const historyString = history.map((h, i) => {
+                    return `第 ${i+1} 次：${h.score}分 / ${h.total}題`;
+                }).join(' ； ');
+                
+                box.innerHTML = `🏆 最近測驗分數：${historyString}`;
+            }
+        }
+
+        function updateReviewButtonCount() {
+            const wrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
+            document.getElementById('review-nav-btn').textContent = `⚠️ 錯題複習 (${wrongList.length})`;
+            
+            const heavyList = JSON.parse(localStorage.getItem('quiz_heavy_wrong_list')) || [];
+            document.getElementById('heavy-nav-btn').textContent = `🔥 常錯題庫 (${heavyList.length})`;
+            
+            updateHistoryUI(); 
+        }
+
+        function startExam(mode = 0) {
+            examMode = mode; 
+            const cleanData = getCleanQuestions();
+            const selectedCourse = document.getElementById('course-select').value;
+            const amountSelectValue = document.getElementById('amount-select').value;
+            
+            document.getElementById('score-banner').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('abandon-btn').style.display = 'none';
+            userAnswers = {};
+            currentQuestionIndex = 0;
+
+            if (examMode === 1) { 
+                const wrongIds = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
+                if (wrongIds.length === 0) { alert('目前沒有錯題可以複習喔！'); return; }
+                let basePool = cleanData.filter(q => wrongIds.includes(getPureId(q.id)));
+                if (basePool.length === 0) { alert('目前沒有錯題可以複習喔！'); return; }
+                examQuestions = shuffle([...basePool]);
+            } 
+            else if (examMode === 2) { 
+                const heavyIds = JSON.parse(localStorage.getItem('quiz_heavy_wrong_list')) || [];
+                if (heavyIds.length === 0) { alert('常錯題庫目前空空如也！'); return; }
+                let basePool = cleanData.filter(q => heavyIds.includes(getPureId(q.id)));
+                if (basePool.length === 0) { alert('常錯題庫目前沒有題目喔！'); return; }
+                examQuestions = shuffle([...basePool]); 
+            } 
+            else { 
+                let basePool = selectedCourse === 'all' ? cleanData : cleanData.filter(q => q.course === selectedCourse);
+                let shuffledPool = shuffle([...basePool]);
+                
+                if (amountSelectValue === 'all_pool') {
+                    examQuestions = shuffledPool;
+                } else {
+                    const amount = parseInt(amountSelectValue, 10);
+                    examQuestions = shuffledPool.slice(0, Math.min(amount, shuffledPool.length));
+                }
+            }
+
+            if (examQuestions.length === 0) { alert('無可抽取的題目！'); return; }
+
+            renderCurrentQuestion();
+            document.getElementById('abandon-btn').style.display = 'block'; 
+        }
+
+        function getEachQuestionStatsText(pureId) {
+            let eachStats = JSON.parse(localStorage.getItem('quiz_each_question_stats')) || {};
+            if (eachStats[pureId] && eachStats[pureId].appear > 0) {
+                let appear = eachStats[pureId].appear;
+                let correct = eachStats[pureId].correct || 0;
+                let rate = Math.round((correct / appear) * 100);
+                return `出現 ${appear} 次，正確率 ${rate}%`;
+            }
+            return `出現 0 次，正確率 0%`;
+        }
+
+        function getDemonHistoryText(pureId) {
+            let log = JSON.parse(localStorage.getItem('quiz_demon_master_log')) || {};
+            if (log[pureId] && log[pureId].historyCount > 0) {
+                return `👹 曾入魔王題：${log[pureId].historyCount} 次`;
+            }
+            return '';
+        }
+
+        function renderCurrentQuestion() {
+            const listContainer = document.getElementById('quiz-list');
+            listContainer.innerHTML = '';
+            document.getElementById('next-btn').style.display = 'none'; 
+
+            let modeText = "📝 線上模擬測驗";
+            if (examMode === 1) modeText = "⚠️ 錯題複習中";
+            if (examMode === 2) modeText = "🔥 常錯魔王題複習中";
+            
+            document.getElementById('panel-title').textContent = `${modeText} (${currentQuestionIndex + 1} / ${examQuestions.length})`;
+
+            const q = examQuestions[currentQuestionIndex];
+            const pureId = getPureId(q.id); 
+
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            card.id = `exam-card-${pureId}`;
+
+            const statText = getEachQuestionStatsText(pureId);
+            const demonText = getDemonHistoryText(pureId);
+
+            card.innerHTML = `
+                <div class="q-title"><span class="q-num">Q${currentQuestionIndex + 1}.</span>${q.title}</div>
+                <div class="option-label" onclick="selectOption(this, '${pureId}', 'A')">${q.a}</div>
+                <div class="option-label" onclick="selectOption(this, '${pureId}', 'B')">${q.b}</div>
+                <div class="option-label" onclick="selectOption(this, '${pureId}', 'C')">${q.c}</div>
+                <div class="option-label" onclick="selectOption(this, '${pureId}', 'D')">${q.d}</div>
+                <div class="card-footer">
+                    ${demonText ? `<span class="demon-tag" id="demon-tag-${pureId}">${demonText}</span>` : ''}
+                    <span class="stat-tag" id="stat-tag-${pureId}">📊 ${statText}</span>
+                    <span class="orig-id">No.${q.id}</span>
+                    <span class="course-tag">📌 ${q.course}</span>
+                </div>
+            `;
+            listContainer.appendChild(card);
+
+            // 💡 徹底拔除原本在這裡的 window.scrollTo，從此手機畫面絕對靜止安分、絕不蓋題！
+        }
+
+        function selectOption(element, pureId, chosenOpt) {
+            const card = document.getElementById(`exam-card-${pureId}`);
+            if (card.classList.contains('answered')) return; 
+            card.classList.add('answered'); 
+
+            const q = examQuestions[currentQuestionIndex];
+            const correctOpt = q.ans.trim().toUpperCase();
+            const isCorrect = (chosenOpt === correctOpt);
+
+            userAnswers[pureId] = { chosen: chosenOpt, isCorrect: isCorrect };
+
+            const labels = card.getElementsByClassName('option-label');
+            const optMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+
+            let demonLog = JSON.parse(localStorage.getItem('quiz_demon_master_log')) || {};
+            let heavyList = JSON.parse(localStorage.getItem('quiz_heavy_wrong_list')) || [];
+            let stats = JSON.parse(localStorage.getItem('quiz_question_stats')) || {};
+            let eachStats = JSON.parse(localStorage.getItem('quiz_each_question_stats')) || {};
+
+            if (!demonLog[pureId]) { demonLog[pureId] = { continuousRight: 0, historyCount: 0 }; }
+            if (!stats[pureId]) { stats[pureId] = { appear: 0, wrong: 0 }; }
+            if (!eachStats[pureId]) { eachStats[pureId] = { appear: 0, correct: 0 }; }
+
+            if (examMode === 0) {
+                stats[pureId].appear += 1;
+                eachStats[pureId].appear += 1;
+            }
+
+            if (isCorrect) {
+                element.classList.add('correct-target');
+                
+                if (examMode === 1) {
+                    let currentWrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
+                    currentWrongList = currentWrongList.filter(id => String(id) !== String(pureId));
+                    localStorage.setItem('quiz_wrong_list', JSON.stringify(currentWrongList));
+                }
+
+                if (examMode === 0) {
+                    eachStats[pureId].correct += 1;
+
+                    if (heavyList.includes(String(pureId))) {
+                        demonLog[pureId].continuousRight = (demonLog[pureId].continuousRight || 0) + 1;
+                        if (demonLog[pureId].continuousRight >= 5) {
+                            heavyList = heavyList.filter(id => String(id) !== String(pureId));
+                            demonLog[pureId].continuousRight = 0; 
+                        }
+                    }
+                }
+            } else {
+                element.classList.add('wrong-target'); 
+                labels[optMap[correctOpt]].classList.add('correct-target'); 
+                
+                if (examMode === 0) {
+                    let currentWrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
+                    if (!currentWrongList.includes(String(pureId))) {
+                        currentWrongList.push(String(pureId));
+                        localStorage.setItem('quiz_wrong_list', JSON.stringify(currentWrongList));
+                    }
+                    
+                    stats[pureId].wrong += 1;
+                    demonLog[pureId].continuousRight = 0; 
+
+                    if (heavyList.includes(String(pureId))) {
+                        // 已經在魔王題庫中
+                    } else if (demonLog[pureId].historyCount > 0) {
+                        heavyList.push(String(pureId));
+                        demonLog[pureId].historyCount += 1;
+                    } else {
+                        if (stats[pureId].wrong >= 3) {
+                            heavyList.push(String(pureId));
+                            demonLog[pureId].historyCount = 1;
+                        }
+                    }
+                }
+            }
+
+            if (examMode === 0) {
+                localStorage.setItem('quiz_question_stats', JSON.stringify(stats));
+                localStorage.setItem('quiz_each_question_stats', JSON.stringify(eachStats));
+                localStorage.setItem('quiz_demon_master_log', JSON.stringify(demonLog));
+                localStorage.setItem('quiz_heavy_wrong_list', JSON.stringify(heavyList));
+
+                const statTag = document.getElementById(`stat-tag-${pureId}`);
+                if (statTag) { statTag.textContent = `📊 ${getEachQuestionStatsText(pureId)}`; }
+            }
+
+            updateReviewButtonCount();
+            document.getElementById('next-btn').style.display = 'block'; 
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < examQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderCurrentQuestion();
+            } else {
+                submitExam(false); 
+            }
+        }
+
+        function submitExam(isAbandon = false) {
+            let correctCount = 0;
+            examQuestions.forEach((q) => {
+                const pureId = getPureId(q.id);
+                const record = userAnswers[pureId];
+                if (record && record.isCorrect) correctCount++;
+            });
+
+            const totalAnswered = Object.keys(userAnswers).length; 
+            const totalQuestions = examQuestions.length;
+            const score = correctCount;
+
+            if (examMode === 0 && totalAnswered > 0) {
+                const selectedCourse = document.getElementById('course-select').value;
+                let history = JSON.parse(localStorage.getItem('quiz_history')) || [];
+                history.unshift({
+                    course: selectedCourse,
+                    score: score,
+                    correctCount: correctCount,
+                    total: totalQuestions
+                });
+                if(history.length > 3) history.pop(); 
+                localStorage.setItem('quiz_history', JSON.stringify(history));
+            }
+
+            updateReviewButtonCount();
+
+            document.getElementById('quiz-list').innerHTML = '';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('abandon-btn').style.display = 'none';
+
+            const banner = document.getElementById('score-banner');
+            banner.style.display = 'block';
+
+            if (examMode === 1) {
+                banner.innerHTML = `🏁 錯題複習結束！<br>本次答對的題目已成功移出錯題本。`;
+            } else if (examMode === 2) {
+                banner.innerHTML = `🏁 常錯魔王題複習結束！<br>符合出獄機制的題目會自動移除，多看幾次保證拿高分！`;
+            } else {
+                const titleText = isAbandon ? "🏳️ 已中途放棄挑戰！" : "🏁 挑戰成功！";
+                banner.innerHTML = `${titleText}<br>最終得分：${score} 分 / 總分 ${totalQuestions} 分<br>(共作答 ${totalAnswered} 題，答對 ${correctCount} 題)`;
+            }
+
+            let modeText = "📝 線上模擬測驗";
+            if (examMode === 1) modeText = "⚠️ 錯題複習";
+            if (examMode === 2) modeText = "🔥 常錯題庫";
+            document.getElementById('panel-title').textContent = `${modeText} (已結束)`;
+        }
+    </script>
+</body>
+</html>
