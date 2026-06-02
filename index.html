@@ -2,490 +2,529 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>線上模擬測驗 - 獨立隨機統計版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公共工程品管班駐班助理提供模擬考題</title>
     <style>
         :root {
-            --primary: #2b6cb0;
-            --success-bg: #e6fffa;
-            --success-border: #319795;
-            --success-text: #234e52;
-            --error-bg: #fff5f5;
-            --error-border: #e53e3e;
-            --error-text: #9b2c2c;
-            --bg: #f7fafc;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
         }
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-        
-        html, body { 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            background-color: var(--bg); 
-            color: #2d3748;
-            overflow: hidden; 
+
+        body {
+            font-family: "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #0f172a;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border);
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+            color: #1e293b;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 16px;
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-secondary { background-color: #64748b; color: white; }
+
+        button:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .question-item {
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+
+        .question-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .course-tag {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-weight: normal;
+        }
+
+        .paper-tag {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .options-list {
             display: flex;
             flex-direction: column;
-        }
-        
-        .top-panel { 
-            background: white; 
-            padding: 10px 15px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
-            z-index: 1000; 
-            max-width: 600px; 
-            width: 100%;
-            margin: 0 auto; 
-            flex-shrink: 0;
-        }
-        .top-panel h2 { margin: 0 0 6px 0; font-size: 1.1rem; color: var(--primary); text-align: center; }
-        
-        .row { display: flex; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
-        select, button, input { padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.9rem; font-weight: bold; width: 100%; }
-        select { background: white; flex: 1; min-width: 0; } 
-        button { background: var(--primary); color: white; border: none; cursor: pointer; }
-        button:active { opacity: 0.8; }
-        
-        .btn-start { background: #319795; flex: 1; }
-        .btn-review { background: #b7791f; flex: 1; }
-        .btn-heavy-wrong { background: #e53e3e; flex: 1; }
-        
-        .history-box { display: none; font-size: 0.78rem; background: #edf2f7; padding: 4px 8px; border-radius: 6px; text-align: center; font-weight: 500; color: #4a5568; margin-top: 4px; word-break: break-all; }
-
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 10px 12px;
+            gap: 10px;
         }
 
-        .quiz-card { background: white; padding: 14px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-left: 4px solid #cbd5e0; }
-        
-        .q-title { font-size: 1rem; margin-bottom: 12px; line-height: 1.4; color: #2d3748; font-weight: 500; }
-        .q-num { font-size: 1.15rem; font-weight: 800; color: #1a365d; margin-right: 4px; display: inline-block; }
-        
-        .option-label { display: block; font-size: 0.9rem; margin: 6px 0; padding: 10px 12px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; background: #fff; transition: background 0.15s; }
-        .option-label:hover { background: #f7fafc; }
-        
-        .quiz-card.answered .option-label { pointer-events: none; }
-        
-        .option-label.correct-target { background-color: var(--success-bg) !important; color: var(--success-text) !important; font-weight: bold; border: 1px solid var(--success-border) !important; }
-        .option-label.wrong-target { background-color: var(--error-bg) !important; color: var(--error-text) !important; border: 1px solid var(--error-border) !important; }
-
-        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 0.75rem; color: #a0aec0; gap: 5px; flex-wrap: wrap; }
-        .footer-left { display: flex; flex-direction: column; gap: 2px; }
-        .course-tag { color: #718096; background: #edf2f7; padding: 2px 6px; border-radius: 4px; font-weight: normal; width: fit-content; }
-        .orig-id { color: #a0aec0; font-family: monospace; font-weight: bold; display: flex; align-items: center; }
-        .stat-tag { color: #718096; font-weight: bold; background: #f7fafc; border: 1px dashed #cbd5e0; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
-        
-        .score-banner { background: #fffaf0; border: 2px dashed #dd6b20; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 10px; display: none; font-weight: bold; color: #dd6b20; font-size: 1.1rem; }
-        
-        .bottom-panel {
-            background: white;
-            padding: 8px 15px;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
-            z-index: 1000;
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
-            flex-shrink: 0;
+        .option-label {
             display: flex;
-            gap: 8px;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
         }
-        .btn-next { background: #48bb78; font-size: 1rem; padding: 10px; flex: 2; display: none; }
-        .btn-abandon { background: #718096; font-size: 0.85rem; padding: 10px; flex: 1; display: none; }
 
-        @media (max-width: 500px) {
-            .row:nth-child(2) { flex-wrap: nowrap; gap: 4px; }
-            button { font-size: 0.8rem; padding: 8px 2px; }
+        .option-label:hover {
+            background-color: #f8fafc;
         }
+
+        .option-label input {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        .option-correct {
+            background-color: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .option-wrong {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #991b1b;
+        }
+
+        .analysis-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary);
+            border-radius: 0 8px 8px 0;
+            font-size: 15px;
+        }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="top-panel">
-        <h2 id="panel-title">📝 線上模擬測驗</h2>
-        <div class="row">
-            <select id="course-select"><option value="all">全部課程 (載入中...)</option></select>
-            <select id="amount-select" style="max-width: 110px;">
-                <option value="30">30 題</option>
-                <option value="50">50 題</option>
-                <option value="100">100 題</option>
-                <option value="200">200 題</option>
-                <option value="2878">全部 (2878 題)</option>
-            </select>
+<div class="container">
+    <div class="header">
+        <h1>公共工程品管班 模擬考系統</h1>
+        <p style="color: var(--text-muted);">6/13加油</p>
+    </div>
+
+    <div class="card" id="setup-card">
+        <h2>📊 設定考卷模式</h2>
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="mode-select">選擇測驗範圍</label>
+                <select id="mode-select">
+                    <option value="all">全部 200 題混合隨機抽題</option>
+                    <option value="paper1">考古題 1</option>
+                    <option value="paper2">考古題 2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="count-select">測驗題數</label>
+                <select id="count-select">
+                    <option value="30">隨機 30 題</option>
+                    <option value="50">隨機 50 題</option>
+                    <option value="100">隨機 100 題</option>
+                    <option value="all">全部考題</option>
+                </select>
+            </div>
         </div>
-        <div class="row">
-            <button class="btn-start" onclick="startExam(0)">🚀 開始</button>
-            <button id="review-nav-btn" class="btn-review" onclick="startExam(1)">⚠️ 錯題 (0)</button>
-            <button id="heavy-nav-btn" class="btn-heavy-wrong" onclick="startExam(2)">🔥 魔王 (0)</button>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="feedback-select">回饋模式</label>
+                <select id="feedback-select">
+                    <option value="instant">練習模式（單題即時對錯與解析）</option>
+                    <option value="submit">交卷模式（寫完統一計算與檢視）</option>
+                </select>
+            </div>
         </div>
-        <div class="history-box" id="history-box"></div>
+
+        <div class="btn-group">
+            <button class="btn-primary" onclick="startExam(false)">🚀 開始測驗</button>
+            <button class="btn-secondary" id="resume-btn" onclick="resumeLastExam()">Memory 繼續上回測驗</button>
+            <button class="btn-danger" id="review-btn" onclick="startExam(true)" disabled>🔥 錯題重測 (<span id="wrong-count-txt">0</span>)</button>
+        </div>
     </div>
 
-    <div class="main-content">
-        <div id="score-banner" class="score-banner"></div>
-        <div id="quiz-list"></div>
+    <div class="card hidden" id="exam-card">
+        <h2 id="exam-title">模擬試卷</h2>
+        <div class="stats-bar">
+            <div>總題數: <span id="stat-total">0</span></div>
+            <div>已作答: <span id="stat-answered">0</span></div>
+            <div style="color: var(--success);">答對: <span id="stat-correct">0</span></div>
+            <div style="color: var(--danger);">當前錯題本總數: <span id="stat-wrong-pool">0</span></div>
+        </div>
+
+        <div id="questions-container"></div>
+
+        <div class="btn-group">
+            <button class="btn-success hidden" id="submit-exam-btn" onclick="gradeEntireExam()">✔️ 檢查交卷</button>
+            <button class="btn-secondary" onclick="backToSetup()">返回設定選單</button>
+        </div>
     </div>
+</div>
 
-    <div class="bottom-panel">
-        <button id="abandon-btn" class="btn-abandon" onclick="submitExam(true)">🏳️ 放棄</button>
-        <button id="next-btn" class="btn-next" onclick="nextQuestion()">➡️ 下一題</button>
-    </div>
+<script src="quiz_data.js"></script>
 
-    <script src="questions.js"></script>
+<script>
+    const allQuestions = typeof quiz_data !== 'undefined' ? quiz_data : [];
+    let currentExamQuestions = [];
+    let wrongQuestionPool = new Set(); 
+    let isReviewMode = false;
 
-    <script>
-        let examQuestions = []; 
-        let currentQuestionIndex = 0; 
-        let examMode = 0; // 0:隨機測驗, 1:錯題複習, 2:常錯魔王題
-        let userAnswers = {}; 
-
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
+    window.onload = function() {
+        if (allQuestions.length === 0) {
+            alert("⚠️ 偵測不到 quiz_data.js！請確認檔案格式正確且放在同一個資料夾下。");
         }
+        loadLocalStorage();
+        updateWrongButtonState();
+    };
 
-        function getPureId(rawId) {
-            if (!rawId) return "";
-            let clean = String(rawId).split('<')[0]; 
-            return clean.replace(/[^0-9]/g, '').trim();
+    // 判斷題目來源：有 origId 代表是考古題 1，沒有則是考古題 2
+    function getPaperSource(q) {
+        return q.hasOwnProperty('origId') ? 'paper1' : 'paper2';
+    }
+
+    function cleanOptionText(optKey, text) {
+        if (!text) return '';
+        const targetPrefix = `(${optKey})`;
+        if (text.trim().startsWith(targetPrefix)) {
+            return text.trim().substring(targetPrefix.length);
         }
+        return text;
+    }
 
-        function getCleanQuestions() {
-            if (typeof allQuestions === 'undefined' || !Array.isArray(allQuestions)) return [];
-            return allQuestions.filter(q => {
-                if (!q.id || !q.title) return false;
-                let idStr = String(q.id).trim();
-                let titleStr = String(q.title).trim();
-                if (idStr.startsWith("序號") || idStr.includes("序號") || titleStr === "題目" || titleStr === "") return false;
-                return true;
-            });
-        }
+    function getCleanId(q) {
+        if (!q.id) return Math.random().toString();
+        return q.id.toString().replace(/<[^>]*>/g, "").trim();
+    }
 
-        window.onload = function() {
-            validateAndSanitizeLocalStorage();
+    function startExam(reviewMode = false) {
+        isReviewMode = reviewMode;
+        let pool = [];
 
-            const cleanData = getCleanQuestions();
-            if (cleanData.length === 0) {
-                alert('無法讀取到題庫！請確認 questions.js 是否在同資料夾。'); 
-                return;
-            }
-            
-            const courseCounts = {};
-            cleanData.forEach(q => {
-                if (q.course) {
-                    const cName = q.course.trim();
-                    courseCounts[cName] = (courseCounts[cName] || 0) + 1;
-                }
-            });
-
-            const courses = [...new Set(cleanData.map(q => q.course && q.course.trim()).filter(Boolean))];
-            const select = document.getElementById('course-select');
-            select.innerHTML = `<option value="all">全部課程 (${cleanData.length}題)</option>`;
-            
-            courses.forEach(c => { 
-                const opt = document.createElement('option'); 
-                opt.value = c; 
-                opt.textContent = `${c} (${courseCounts[c]}題)`; 
-                select.appendChild(opt); 
-            });
-
-            updateReviewButtonCount();
-        };
-
-        function validateAndSanitizeLocalStorage() {
-            const cleanData = getCleanQuestions();
-            const validPureIds = cleanData.map(q => getPureId(q.id));
-
-            let wrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
-            let updatedWrongList = wrongList.filter(id => validPureIds.includes(String(id)));
-            localStorage.setItem('quiz_wrong_list', JSON.stringify(updatedWrongList));
-
-            let heavyList = JSON.parse(localStorage.getItem('quiz_heavy_wrong_list')) || [];
-            let updatedHeavyList = heavyList.filter(id => validPureIds.includes(String(id)));
-            localStorage.setItem('quiz_heavy_wrong_list', JSON.stringify(updatedHeavyList));
-
-            let history = JSON.parse(localStorage.getItem('quiz_history')) || [];
-            let needCleanHistory = history.some(h => !h || h.score === undefined || h.course === "undefined" || String(h.score).includes('undefined'));
-            if (needCleanHistory) { localStorage.removeItem('quiz_history'); }
-        }
-
-        function updateHistoryUI() {
-            const history = JSON.parse(localStorage.getItem('quiz_history')) || [];
-            const box = document.getElementById('history-box');
-            if (history.length === 0) {
-                box.style.display = 'none'; 
+        if (isReviewMode) {
+            pool = allQuestions.filter(q => wrongQuestionPool.has(getCleanId(q)));
+        } else {
+            const rangeMode = document.getElementById('mode-select').value;
+            if (rangeMode === 'all') {
+                pool = [...allQuestions];
             } else {
-                box.style.display = 'block'; 
-                const historyString = history.map((h, i) => `${h.score}分/${h.total}題`).join(' ； ');
-                box.innerHTML = `🏆 歷史：${historyString}`;
+                // 自動依欄位屬性篩選出考古題 1 或 考古題 2
+                pool = allQuestions.filter(q => getPaperSource(q) === rangeMode);
             }
         }
 
-        function updateReviewButtonCount() {
-            const wrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
-            document.getElementById('review-nav-btn').textContent = `⚠️ 錯題 (${wrongList.length})`;
-            
-            const heavyList = JSON.parse(localStorage.getItem('quiz_heavy_wrong_list')) || [];
-            document.getElementById('heavy-nav-btn').textContent = `🔥 魔王 (${heavyList.length})`;
-            
-            updateHistoryUI(); 
+        if (pool.length === 0) {
+            alert("目前沒有符合設定的題目可抽取！");
+            return;
         }
 
-        function startExam(mode = 0) {
-            examMode = mode; 
-            const cleanData = getCleanQuestions();
-            const selectedCourse = document.getElementById('course-select').value;
-            const amount = parseInt(document.getElementById('amount-select').value, 10);
-            
-            document.getElementById('score-banner').style.display = 'none';
-            document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('abandon-btn').style.display = 'none';
-            userAnswers = {};
-            currentQuestionIndex = 0;
-
-            if (examMode === 1) { 
-                const wrongIds = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
-                if (wrongIds.length === 0) { alert('目前沒有錯題可以複習喔！'); return; }
-                let basePool = cleanData.filter(q => wrongIds.includes(getPureId(q.id)));
-                if (basePool.length === 0) { alert('沒有符合的錯題資料！'); return; }
-                examQuestions = shuffle([...basePool]);
-            } 
-            else if (examMode === 2) { 
-                const heavyIds = JSON.parse(localStorage.getItem('quiz_heavy_wrong_list')) || [];
-                if (heavyIds.length === 0) { alert('常錯題庫目前空空如也！'); return; }
-                let basePool = cleanData.filter(q => heavyIds.includes(getPureId(q.id)));
-                if (basePool.length === 0) { alert('常錯題庫目前沒有題目喔！'); return; }
-                examQuestions = shuffle([...basePool]); 
-            } 
-            else { 
-                let basePool = selectedCourse === 'all' ? cleanData : cleanData.filter(q => q.course === selectedCourse);
-                let shuffledPool = shuffle([...basePool]);
-                examQuestions = shuffledPool.slice(0, Math.min(amount, shuffledPool.length));
-
-                // 隨機測驗抽題累加 appear (不變)
-                let stats = JSON.parse(localStorage.getItem('quiz_question_stats')) || {};
-                examQuestions.forEach(q => {
-                    let pId = getPureId(q.id);
-                    if (!stats[pId]) stats[pId] = { appear: 0, wrong: 0, correct_count: 0, jail_count: 0, had_been_out: false };
-                    stats[pId].appear += 1;
-                });
-                localStorage.setItem('quiz_question_stats', JSON.stringify(stats));
-            }
-
-            if (examQuestions.length === 0) { alert('無可抽取的題目！'); return; }
-
-            renderCurrentQuestion();
-            document.getElementById('abandon-btn').style.display = 'block'; 
+        pool.sort(() => Math.random() - 0.5);
+        
+        const countLimit = document.getElementById('count-select').value;
+        if (countLimit !== 'all' && !isReviewMode) {
+            pool = pool.slice(0, Math.min(parseInt(countLimit), pool.length));
         }
 
-        function getEachQuestionStatsText(pureId) {
-            let eachStats = JSON.parse(localStorage.getItem('quiz_each_question_stats')) || {};
-            let stats = JSON.parse(localStorage.getItem('quiz_question_stats')) || {};
-            let jailInfo = (stats[pureId] && stats[pureId].jail_count > 0) ? ` | 入獄 ${stats[pureId].jail_count} 次` : "";
+        currentExamQuestions = pool.map(q => ({
+            ...q, 
+            uniqueId: getCleanId(q),
+            userAns: null, 
+            isGraded: false
+        }));
+        
+        renderExam();
+        saveCurrentState();
+    }
+
+    function renderExam() {
+        document.getElementById('setup-card').classList.add('hidden');
+        document.getElementById('exam-card').classList.remove('hidden');
+        
+        document.getElementById('exam-title').textContent = isReviewMode ? "🔥 錯題特訓重測模式" : "📝 線上隨機模擬考試";
+        const container = document.getElementById('questions-container');
+        container.innerHTML = '';
+
+        const isInstant = document.getElementById('feedback-select').value === 'instant';
+        document.getElementById('submit-exam-btn').classList.toggle('hidden', isInstant);
+
+        currentExamQuestions.forEach((q, idx) => {
+            const qEl = document.createElement('div');
+            qEl.className = 'question-item';
+            qEl.id = `q-box-${idx}`;
             
-            if (eachStats[pureId] && eachStats[pureId].appear > 0) {
-                let appear = eachStats[pureId].appear;
-                let correct = eachStats[pureId].correct;
-                let rate = Math.round((correct / appear) * 100);
-                return `出現 ${appear} 次，正確率 ${rate}%${jailInfo}`;
-            }
-            return `出現 0 次，正確率 0%${jailInfo}`;
-        }
+            const textA = cleanOptionText('A', q.a);
+            const textB = cleanOptionText('B', q.b);
+            const textC = cleanOptionText('C', q.c);
+            const textD = cleanOptionText('D', q.d);
 
-        function renderCurrentQuestion() {
-            const listContainer = document.getElementById('quiz-list');
-            listContainer.innerHTML = '';
-            document.getElementById('next-btn').style.display = 'none'; 
+            const sourceText = getPaperSource(q) === 'paper1' ? '考古題 1' : '考古題 2';
 
-            let modeText = "📝 模擬測驗";
-            if (examMode === 1) modeText = "⚠️ 錯題複習";
-            if (examMode === 2) modeText = "🔥 魔王複習";
-            
-            document.getElementById('panel-title').textContent = `${modeText} (${currentQuestionIndex + 1}/${examQuestions.length})`;
-
-            const q = examQuestions[currentQuestionIndex];
-            const card = document.createElement('div');
-            card.className = 'quiz-card';
-            
-            let pId = getPureId(q.id);
-            card.id = `exam-card-${pId}`;
-
-            const statText = getEachQuestionStatsText(pId);
-
-            card.innerHTML = `
-                <div class="q-title"><span class="q-num">Q${currentQuestionIndex + 1}.</span>${q.title}</div>
-                <div class="option-label" onclick="selectOption(this, '${pId}', 'A')">${q.a}</div>
-                <div class="option-label" onclick="selectOption(this, '${pId}', 'B')">${q.b}</div>
-                <div class="option-label" onclick="selectOption(this, '${pId}', 'C')">${q.c}</div>
-                <div class="option-label" onclick="selectOption(this, '${pId}', 'D')">${q.d}</div>
-                <div class="card-footer">
-                    <div class="footer-left">
-                        <span class="orig-id">No. ${q.id}</span>
-                        <span class="course-tag">📌 ${q.course}</span>
-                    </div>
-                    <div class="stat-tag" id="stat-tag-${pId}">📊 ${statText}</div>
+            qEl.innerHTML = `
+                <div>
+                    <span class="paper-tag">${sourceText}</span>
+                    <span class="course-tag">${q.course || '綜合'}</span>
+                </div>
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">題號：${q.id}</div>
+                <div class="question-title">${idx + 1}. ${q.title}</div>
+                <div class="options-list">
+                    <label class="option-label" id="label-${idx}-A"><input type="radio" name="q-${idx}" value="A" ${q.userAns==='A'?'checked':''} onchange="selectAnswer(${idx}, 'A')"> <strong>(A)</strong> ${textA}</label>
+                    <label class="option-label" id="label-${idx}-B"><input type="radio" name="q-${idx}" value="B" ${q.userAns==='B'?'checked':''} onchange="selectAnswer(${idx}, 'B')"> <strong>(B)</strong> ${textB}</label>
+                    <label class="option-label" id="label-${idx}-C"><input type="radio" name="q-${idx}" value="C" ${q.userAns==='C'?'checked':''} onchange="selectAnswer(${idx}, 'C')"> <strong>(C)</strong> ${textC}</label>
+                    <label class="option-label" id="label-${idx}-D"><input type="radio" name="q-${idx}" value="D" ${q.userAns==='D'?'checked':''} onchange="selectAnswer(${idx}, 'D')"> <strong>(D)</strong> ${textD}</label>
+                </div>
+                <div class="analysis-box hidden" id="analysis-${idx}">
+                    <strong>標準答案：【${q.ans.trim().toUpperCase()}】</strong><br>
                 </div>
             `;
-            listContainer.appendChild(card);
+            container.appendChild(qEl);
 
-            document.querySelector('.main-content').scrollTop = 0;
+            if (q.isGraded || (isInstant && q.userAns)) {
+                revealSingleQuestion(idx);
+            }
+        });
+
+        updateStats();
+    }
+
+    function selectAnswer(idx, ans) {
+        currentExamQuestions[idx].userAns = ans;
+        const isInstant = document.getElementById('feedback-select').value === 'instant';
+        const q = currentExamQuestions[idx];
+        
+        if (isInstant) {
+            revealSingleQuestion(idx);
+            if (ans === q.ans.trim().toUpperCase()) {
+                wrongQuestionPool.delete(q.uniqueId);
+            } else {
+                wrongQuestionPool.add(q.uniqueId);
+            }
+            updateWrongButtonState();
         }
+        
+        updateStats();
+        saveCurrentState();
+    }
 
-        function selectOption(element, pId, chosenOpt) {
-            const card = document.getElementById(`exam-card-${pId}`);
-            if (card.classList.contains('answered')) return; 
-            card.classList.add('answered'); 
-
-            const q = examQuestions[currentQuestionIndex];
-            const correctOpt = q.ans.trim().toUpperCase().replace(/[^A-D]/g, ''); 
-            const isCorrect = (chosenOpt === correctOpt);
-
-            userAnswers[pId] = { chosen: chosenOpt, isCorrect: isCorrect };
-
-            // 取得魔王統計資料
-            let stats = JSON.parse(localStorage.getItem('quiz_question_stats')) || {};
-            if (!stats[pId]) stats[pId] = { appear: 1, wrong: 0, correct_count: 0, jail_count: 0, had_been_out: false };
-
-            // 隨機測驗模式才處理統計與出入獄
-            if (examMode === 0) {
-                // 更新出現次數與正確率顯示用的資料
-                let eachStats = JSON.parse(localStorage.getItem('quiz_each_question_stats')) || {};
-                if (!eachStats[pId]) eachStats[pId] = { appear: 0, correct: 0 };
-                eachStats[pId].appear += 1;
-                if (isCorrect) { eachStats[pId].correct += 1; }
-                localStorage.setItem('quiz_each_question_stats', JSON.stringify(eachStats));
-
-                let heavyList = JSON.parse(localStorage.getItem('quiz_heavy_wrong_list')) || [];
-
-                if (isCorrect) {
-                    stats[pId].correct_count += 1;
-                    // 出獄規則：出現 >= 5 且 正確 >= 5
-                    if (stats[pId].appear >= 5 && stats[pId].correct_count >= 5) {
-                        if (heavyList.includes(String(pId))) {
-                            heavyList = heavyList.filter(id => id !== String(pId));
-                            stats[pId].had_been_out = true; // 標記曾出獄
-                            stats[pId].wrong = 0; // 重置錯誤計數，等待下次累計或累犯
-                            stats[pId].correct_count = 0; // 重置正確計數
-                        }
-                    }
-                } else {
-                    stats[pId].wrong += 1;
-                    stats[pId].correct_count = 0; // 答錯就重置連續正確計數
-
-                    // 入獄規則：
-                    // A. 曾出獄者(had_been_out)，一錯直接入獄
-                    // B. 未曾出獄或普通狀態，出現 >= 3 且 錯 >= 3
-                    let shouldJail = false;
-                    if (stats[pId].had_been_out) {
-                        shouldJail = true;
-                    } else if (stats[pId].appear >= 3 && stats[pId].wrong >= 3) {
-                        shouldJail = true;
-                    }
-
-                    if (shouldJail && !heavyList.includes(String(pId))) {
-                        heavyList.push(String(pId));
-                        stats[pId].jail_count = (stats[pId].jail_count || 0) + 1;
-                        stats[pId].had_been_out = false; // 入獄後重置出獄標記
-                    }
-
-                    // 同時加入普通錯題庫
-                    let currentWrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
-                    if (!currentWrongList.includes(String(pId))) {
-                        currentWrongList.push(String(pId));
-                        localStorage.setItem('quiz_wrong_list', JSON.stringify(currentWrongList));
-                    }
+    function revealSingleQuestion(idx) {
+        const q = currentExamQuestions[idx];
+        const options = ['A', 'B', 'C', 'D'];
+        const targetAns = q.ans.trim().toUpperCase();
+        
+        options.forEach(opt => {
+            const lbl = document.getElementById(`label-${idx}-${opt}`);
+            if (lbl) {
+                lbl.classList.remove('option-correct', 'option-wrong');
+                if (opt === targetAns) {
+                    lbl.classList.add('option-correct');
+                } else if (q.userAns === opt && opt !== targetAns) {
+                    lbl.classList.add('option-wrong');
                 }
-                
-                localStorage.setItem('quiz_question_stats', JSON.stringify(stats));
-                localStorage.setItem('quiz_heavy_wrong_list', JSON.stringify(heavyList));
-                
-                // 即時渲染標籤
-                const statTag = document.getElementById(`stat-tag-${pId}`);
-                if (statTag) { statTag.textContent = `📊 ${getEachQuestionStatsText(pId)}`; }
             }
+        });
 
-            // 處理選項視覺反饋 (不分模式)
-            const labels = card.getElementsByClassName('option-label');
-            const optMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+        document.getElementById(`analysis-${idx}`).classList.remove('hidden');
+    }
 
-            if (isCorrect) {
-                element.classList.add('correct-target');
-                if (examMode === 1) {
-                    let currentWrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
-                    currentWrongList = currentWrongList.filter(id => String(id) !== String(pId));
-                    localStorage.setItem('quiz_wrong_list', JSON.stringify(currentWrongList));
-                }
+    function gradeEntireExam() {
+        currentExamQuestions.forEach((q, idx) => {
+            q.isGraded = true;
+            revealSingleQuestion(idx);
+
+            if (q.userAns === q.ans.trim().toUpperCase()) {
+                wrongQuestionPool.delete(q.uniqueId); 
             } else {
-                element.classList.add('wrong-target'); 
-                if (optMap[correctOpt] !== undefined) { labels[optMap[correctOpt]].classList.add('correct-target'); }
+                wrongQuestionPool.add(q.uniqueId); 
             }
+        });
+        
+        updateStats();
+        updateWrongButtonState();
+        saveCurrentState();
+        alert("整卷批改完成！錯題複習本已即時動態同步。");
+    }
 
-            updateReviewButtonCount();
-            document.getElementById('next-btn').style.display = 'block'; 
+    function updateStats() {
+        const total = currentExamQuestions.length;
+        const answered = currentExamQuestions.filter(q => q.userAns !== null).length;
+        const correct = currentExamQuestions.filter(q => q.userAns === q.ans.trim().toUpperCase()).length;
+
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-answered').textContent = answered;
+        document.getElementById('stat-correct').textContent = correct;
+        document.getElementById('stat-wrong-pool').textContent = wrongQuestionPool.size;
+    }
+
+    function updateWrongButtonState() {
+        const count = wrongQuestionPool.size;
+        document.getElementById('wrong-count-txt').textContent = count;
+        document.getElementById('review-btn').disabled = (count === 0);
+    }
+
+    function backToSetup() {
+        document.getElementById('exam-card').classList.add('hidden');
+        document.getElementById('setup-card').classList.remove('hidden');
+    }
+
+    function saveCurrentState() {
+        localStorage.setItem('wrong_pool', JSON.stringify([...wrongQuestionPool]));
+        localStorage.setItem('last_exam_questions', JSON.stringify(currentExamQuestions));
+        localStorage.setItem('exam_settings', JSON.stringify({
+            mode: document.getElementById('mode-select').value,
+            count: document.getElementById('count-select').value,
+            feedback: document.getElementById('feedback-select').value
+        }));
+    }
+
+    function loadLocalStorage() {
+        const wp = localStorage.getItem('wrong_pool');
+        if (wp) wrongQuestionPool = new Set(JSON.parse(wp));
+
+        const lastActive = localStorage.getItem('last_exam_questions');
+        if (lastActive && JSON.parse(lastActive).length > 0) {
+            document.getElementById('resume-btn').disabled = false;
+        } else {
+            document.getElementById('resume-btn').disabled = true;
         }
+    }
 
-        function nextQuestion() {
-            if (currentQuestionIndex < examQuestions.length - 1) {
-                currentQuestionIndex++;
-                renderCurrentQuestion();
-            } else {
-                submitExam(false); 
-            }
-        }
+    function resumeLastExam() {
+        const lastActive = localStorage.getItem('last_exam_questions');
+        const settings = localStorage.getItem('exam_settings');
+        if (lastActive && settings) {
+            const setObj = JSON.parse(settings);
+            document.getElementById('mode-select').value = setObj.mode;
+            document.getElementById('count-select').value = setObj.count;
+            document.getElementById('feedback-select').value = setObj.feedback;
 
-        function submitExam(isAbandon = false) {
-            let correctCount = 0;
-            examQuestions.forEach((q) => {
-                let pId = getPureId(q.id);
-                const record = userAnswers[pId];
-                if (record && record.isCorrect) correctCount++;
-            });
-
-            const totalAnswered = Object.keys(userAnswers).length; 
-            const totalQuestions = examQuestions.length;
-            const score = correctCount;
-
-            if (examMode === 0 && totalAnswered > 0) {
-                const selectedCourse = document.getElementById('course-select').value;
-                let history = JSON.parse(localStorage.getItem('quiz_history')) || [];
-                history.unshift({ course: selectedCourse, score: score, correctCount: correctCount, total: totalQuestions });
-                if(history.length > 3) history.pop(); 
-                localStorage.setItem('quiz_history', JSON.stringify(history));
-            }
-
-            updateReviewButtonCount();
-
-            document.getElementById('quiz-list').innerHTML = '';
-            document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('abandon-btn').style.display = 'none';
-
-            const banner = document.getElementById('score-banner');
-            banner.style.display = 'block';
-
-            if (examMode === 1) {
-                banner.innerHTML = `🏁 錯題複習結束！<br>本次答對的題目已成功移出。`;
-            } else if (examMode === 2) {
-                banner.innerHTML = `🏁 魔王題複習結束！<br>多看幾次保證拿高分！`;
-            } else {
-                const titleText = isAbandon ? "🏳️ 已中途放棄！" : "🏁 挑戰成功！";
-                banner.innerHTML = `${titleText}<br>最終得分：${score} 分 / 總分 ${totalQuestions} 分<br>(共作答 ${totalAnswered} 題，答對 ${correctCount} 題)`;
-            }
-
-            let modeText = "📝 模擬測驗";
-            if (examMode === 1) modeText = "⚠️ 錯題複習";
-            if (examMode === 2) modeText = "🔥 魔王題";
-            document.getElementById('panel-title').textContent = `${modeText} (已結束)`;
+            currentExamQuestions = JSON.parse(lastActive);
+            const hasReviewTitle = currentExamQuestions.every(q => wrongQuestionPool.has(q.uniqueId));
+            isReviewMode = (setObj.mode !== 'all' && setObj.mode !== 'paper1' && setObj.mode !== 'paper2' && hasReviewTitle);
             
-            document.querySelector('.main-content').scrollTop = 0;
+            renderExam();
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
