@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公共工程品管班駐班助理提供模擬考題</title>
+    <title>公共工程品管班 - 四合一終極線上模擬考系統</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -15,6 +15,7 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --border: #e2e8f0;
+            --warning: #f59e0b;
         }
 
         body {
@@ -120,6 +121,7 @@
             cursor: not-allowed;
         }
 
+        /* 統計狀態列 */
         .stats-bar {
             display: flex;
             justify-content: space-around;
@@ -131,6 +133,39 @@
             font-size: 15px;
         }
 
+        /* 終局成績單卡片樣式 */
+        .score-board {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #bfdbfe;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1);
+        }
+
+        .score-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .score-number {
+            font-size: 48px;
+            font-weight: 800;
+            color: #1d4ed8;
+            margin: 15px 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .score-details {
+            font-size: 16px;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+
+        /* 題目項目 */
         .question-item {
             padding: 20px;
             border: 1px solid var(--border);
@@ -223,7 +258,14 @@
 <div class="container">
     <div class="header">
         <h1>公共工程品管班 模擬考系統</h1>
-        <p style="color: var(--text-muted);">6/13加油</p>
+        <p style="color: var(--text-muted);">客製化範圍篩選：200題混合抽、考古題1、考古題2</p>
+    </div>
+
+    <div class="score-board hidden" id="score-board-card">
+        <div class="score-title" id="score-board-title">🎉 測驗完成！成績結算</div>
+        <div class="score-number" id="score-display">0 / 0</div>
+        <div class="score-details" id="score-details-text">答對題數：0 題 | 答錯題數：0 題 | 得分率：0%</div>
+        <div style="margin-top: 15px; font-size: 14px; color: #2563eb;">💡 您可以在下方逐題檢視錯題與標準答案。</div>
     </div>
 
     <div class="card" id="setup-card">
@@ -233,8 +275,8 @@
                 <label for="mode-select">選擇測驗範圍</label>
                 <select id="mode-select">
                     <option value="all">全部 200 題混合隨機抽題</option>
-                    <option value="paper1">考古題 1</option>
-                    <option value="paper2">考古題 2</option>
+                    <option value="paper1">僅測驗【考古題 1】</option>
+                    <option value="paper2">僅測驗【考古題 2】</option>
                 </select>
             </div>
             <div class="form-group">
@@ -278,6 +320,7 @@
 
         <div class="btn-group">
             <button class="btn-success hidden" id="submit-exam-btn" onclick="gradeEntireExam()">✔️ 檢查交卷</button>
+            <button class="btn-danger hidden" id="finish-instant-btn" onclick="finishInstantExam()">🛑 結束測驗並看總分</button>
             <button class="btn-secondary" onclick="backToSetup()">返回設定選單</button>
         </div>
     </div>
@@ -299,7 +342,6 @@
         updateWrongButtonState();
     };
 
-    // 判斷題目來源：有 origId 代表是考古題 1，沒有則是考古題 2
     function getPaperSource(q) {
         return q.hasOwnProperty('origId') ? 'paper1' : 'paper2';
     }
@@ -322,6 +364,9 @@
         isReviewMode = reviewMode;
         let pool = [];
 
+        // 隱藏上一次的成績單
+        document.getElementById('score-board-card').classList.add('hidden');
+
         if (isReviewMode) {
             pool = allQuestions.filter(q => wrongQuestionPool.has(getCleanId(q)));
         } else {
@@ -329,7 +374,6 @@
             if (rangeMode === 'all') {
                 pool = [...allQuestions];
             } else {
-                // 自動依欄位屬性篩選出考古題 1 或 考古題 2
                 pool = allQuestions.filter(q => getPaperSource(q) === rangeMode);
             }
         }
@@ -366,7 +410,10 @@
         container.innerHTML = '';
 
         const isInstant = document.getElementById('feedback-select').value === 'instant';
+        
+        // 根據練習模式或交卷模式控制底部按鈕
         document.getElementById('submit-exam-btn').classList.toggle('hidden', isInstant);
+        document.getElementById('finish-instant-btn').classList.toggle('hidden', !isInstant);
 
         currentExamQuestions.forEach((q, idx) => {
             const qEl = document.createElement('div');
@@ -395,6 +442,7 @@
                 </div>
                 <div class="analysis-box hidden" id="analysis-${idx}">
                     <strong>標準答案：【${q.ans.trim().toUpperCase()}】</strong><br>
+                    <span style="color:var(--text-muted);">說明：請對照公共工程品質管理教材。</span>
                 </div>
             `;
             container.appendChild(qEl);
@@ -408,6 +456,8 @@
     }
 
     function selectAnswer(idx, ans) {
+        if (currentExamQuestions[idx].isGraded && document.getElementById('feedback-select').value === 'submit') return;
+        
         currentExamQuestions[idx].userAns = ans;
         const isInstant = document.getElementById('feedback-select').value === 'instant';
         const q = currentExamQuestions[idx];
@@ -420,6 +470,12 @@
                 wrongQuestionPool.add(q.uniqueId);
             }
             updateWrongButtonState();
+            
+            // 智慧檢查：如果是練習模式，且所有題目都寫完了，自動觸發總結畫面
+            const answeredCount = currentExamQuestions.filter(item => item.userAns !== null).length;
+            if (answeredCount === currentExamQuestions.length) {
+                calculateAndShowScore();
+            }
         }
         
         updateStats();
@@ -446,6 +502,7 @@
         document.getElementById(`analysis-${idx}`).classList.remove('hidden');
     }
 
+    // 交卷模式：整卷批改並彈出成績
     function gradeEntireExam() {
         currentExamQuestions.forEach((q, idx) => {
             q.isGraded = true;
@@ -460,8 +517,37 @@
         
         updateStats();
         updateWrongButtonState();
+        calculateAndShowScore(); // 計算並展示總分畫面
         saveCurrentState();
-        alert("整卷批改完成！錯題複習本已即時動態同步。");
+    }
+
+    // 練習模式：主動點擊結束時看總分
+    function finishInstantExam() {
+        calculateAndShowScore();
+    }
+
+    // 核心邏輯：計算總分並跳轉顯示
+    function calculateAndShowScore() {
+        const total = currentExamQuestions.length;
+        const correct = currentExamQuestions.filter(q => q.userAns === q.ans.trim().toUpperCase()).length;
+        const wrong = total - correct;
+        const rate = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+        // 填入總分格式 e.g. 75 / 100
+        document.getElementById('score-display').textContent = `${correct} / ${total}`;
+        document.getElementById('score-details-text').textContent = `答對：${correct} 題 | 答錯(或未答)：${wrong} 題 | 正確率：${rate}%`;
+        
+        if (isReviewMode) {
+            document.getElementById('score-board-title').textContent = "🔥 錯題特訓模式：結算成績";
+        } else {
+            document.getElementById('score-board-title').textContent = "🎉 測驗完成！成績結算";
+        }
+
+        // 顯示成績單卡片
+        document.getElementById('score-board-card').classList.remove('hidden');
+
+        // 自動平滑滾動到最上方，讓使用者第一時間看到分數
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function updateStats() {
@@ -483,6 +569,7 @@
 
     function backToSetup() {
         document.getElementById('exam-card').classList.add('hidden');
+        document.getElementById('score-board-card').classList.add('hidden'); // 隱藏分數
         document.getElementById('setup-card').classList.remove('hidden');
     }
 
@@ -522,6 +609,13 @@
             isReviewMode = (setObj.mode !== 'all' && setObj.mode !== 'paper1' && setObj.mode !== 'paper2' && hasReviewTitle);
             
             renderExam();
+            
+            // 如果儲存的進度已經改完考卷或全部做完，自動把分數呈現出來
+            const isGraded = currentExamQuestions.some(q => q.isGraded);
+            const answeredCount = currentExamQuestions.filter(item => item.userAns !== null).length;
+            if (isGraded || (setObj.feedback === 'instant' && answeredCount === currentExamQuestions.length)) {
+                calculateAndShowScore();
+            }
         }
     }
 </script>
