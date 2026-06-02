@@ -15,7 +15,6 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --border: #e2e8f0;
-            --warning: #f59e0b;
         }
 
         body {
@@ -121,7 +120,6 @@
             cursor: not-allowed;
         }
 
-        /* 統計狀態列 */
         .stats-bar {
             display: flex;
             justify-content: space-around;
@@ -133,36 +131,38 @@
             font-size: 15px;
         }
 
-        /* 終局成績單卡片樣式 */
+        /* 專屬純淨成績單卡片 */
         .score-board {
             background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
             border: 2px solid #bfdbfe;
             border-radius: 16px;
-            padding: 30px;
+            padding: 40px;
             text-align: center;
             margin-bottom: 25px;
-            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.15);
         }
 
         .score-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             color: #1e40af;
             margin-bottom: 10px;
         }
 
         .score-number {
-            font-size: 48px;
-            font-weight: 800;
+            font-size: 64px;
+            font-weight: 900;
             color: #1d4ed8;
-            margin: 15px 0;
+            margin: 20px 0;
             font-family: Arial, sans-serif;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .score-details {
-            font-size: 16px;
+            font-size: 18px;
             color: #1e3a8a;
             font-weight: 600;
+            margin-bottom: 25px;
         }
 
         /* 題目項目 */
@@ -257,15 +257,20 @@
 
 <div class="container">
     <div class="header">
-        <h1>公共工程品管班考古題系統</h1>
-        <p style="color: var(--text-muted);">6/13考試加油！</p>
+        <h1>公共工程品管班 模擬考系統</h1>
+        <p style="color: var(--text-muted);">6/13考試加油！容錯率只能夠有20題，不能超過唷</p>
     </div>
 
-    <div class="score-board hidden" id="score-board-card">
-        <div class="score-title" id="score-board-title">🎉 測驗完成！成績結算</div>
-        <div class="score-number" id="score-display">0 / 0</div>
-        <div class="score-details" id="score-details-text">答對題數：0 題 | 答錯題數：0 題 | 得分率：0%</div>
-        <div style="margin-top: 15px; font-size: 14px; color: #2563eb;">💡 您可以在下方逐題檢視錯題與標準答案。</div>
+    <div class="card hidden" id="score-screen">
+        <div class="score-board">
+            <div class="score-title" id="score-board-title">🎉 測驗完成！成績結算</div>
+            <div class="score-number" id="score-display">0 / 0</div>
+            <div class="score-details" id="score-details-text">答對題數：0 題 | 答錯題數：0 題 | 得分率：0%</div>
+            <p style="color: #64748b; font-size: 15px; margin-bottom: 0;">錯題已自動同步寫入首頁的「錯題重測」系統中。</p>
+        </div>
+        <div style="text-align: center;">
+            <button class="btn-primary" style="font-size: 18px; padding: 14px 40px;" onclick="backToSetup()">🔙 返回測驗首頁</button>
+        </div>
     </div>
 
     <div class="card" id="setup-card">
@@ -319,9 +324,9 @@
         <div id="questions-container"></div>
 
         <div class="btn-group">
-            <button class="btn-success hidden" id="submit-exam-btn" onclick="gradeEntireExam()">✔️ 檢查交卷</button>
-            <button class="btn-danger hidden" id="finish-instant-btn" onclick="finishInstantExam()">🛑 結束測驗並看總分</button>
-            <button class="btn-secondary" onclick="backToSetup()">返回設定選單</button>
+            <button class="btn-success hidden" id="submit-exam-btn" onclick="gradeEntireExam()">✔️ 檢查交卷並看分數</button>
+            <button class="btn-danger hidden" id="finish-instant-btn" onclick="finishInstantExam()">🛑 結束測驗並看分數</button>
+            <button class="btn-secondary" onclick="backToSetup()">返回首頁</button>
         </div>
     </div>
 </div>
@@ -364,8 +369,8 @@
         isReviewMode = reviewMode;
         let pool = [];
 
-        // 隱藏上一次的成績單
-        document.getElementById('score-board-card').classList.add('hidden');
+        // 隱藏分數畫面與主畫面
+        document.getElementById('score-screen').classList.add('hidden');
 
         if (isReviewMode) {
             pool = allQuestions.filter(q => wrongQuestionPool.has(getCleanId(q)));
@@ -411,7 +416,6 @@
 
         const isInstant = document.getElementById('feedback-select').value === 'instant';
         
-        // 根據練習模式或交卷模式控制底部按鈕
         document.getElementById('submit-exam-btn').classList.toggle('hidden', isInstant);
         document.getElementById('finish-instant-btn').classList.toggle('hidden', !isInstant);
 
@@ -470,7 +474,7 @@
             }
             updateWrongButtonState();
             
-            // 智慧檢查：如果是練習模式，且所有題目都寫完了，自動觸發總結畫面
+            // 智慧自動交卷：練習模式全部點完時
             const answeredCount = currentExamQuestions.filter(item => item.userAns !== null).length;
             if (answeredCount === currentExamQuestions.length) {
                 calculateAndShowScore();
@@ -501,12 +505,10 @@
         document.getElementById(`analysis-${idx}`).classList.remove('hidden');
     }
 
-    // 交卷模式：整卷批改並彈出成績
+    // 交卷模式批改
     function gradeEntireExam() {
         currentExamQuestions.forEach((q, idx) => {
             q.isGraded = true;
-            revealSingleQuestion(idx);
-
             if (q.userAns === q.ans.trim().toUpperCase()) {
                 wrongQuestionPool.delete(q.uniqueId); 
             } else {
@@ -516,36 +518,43 @@
         
         updateStats();
         updateWrongButtonState();
-        calculateAndShowScore(); // 計算並展示總分畫面
+        calculateAndShowScore(); 
         saveCurrentState();
     }
 
-    // 練習模式：主動點擊結束時看總分
+    // 練習模式點擊結束
     function finishInstantExam() {
+        // 未寫的題目自動判定為錯，更新錯題本
+        currentExamQuestions.forEach((q) => {
+            if (q.userAns !== q.ans.trim().toUpperCase()) {
+                wrongQuestionPool.add(q.uniqueId);
+            }
+        });
+        updateWrongButtonState();
         calculateAndShowScore();
+        saveCurrentState();
     }
 
-    // 核心邏輯：計算總分並跳轉顯示
+    // 🌟 核心切換：隱藏考卷，只展示分數畫面
     function calculateAndShowScore() {
         const total = currentExamQuestions.length;
         const correct = currentExamQuestions.filter(q => q.userAns === q.ans.trim().toUpperCase()).length;
         const wrong = total - correct;
         const rate = total > 0 ? Math.round((correct / total) * 100) : 0;
 
-        // 填入總分格式 e.g. 75 / 100
         document.getElementById('score-display').textContent = `${correct} / ${total}`;
-        document.getElementById('score-details-text').textContent = `答對：${correct} 題 | 答錯(或未答)：${wrong} 題 | 正確率：${rate}%`;
+        document.getElementById('score-details-text').textContent = `答對：${correct} 題 | 答錯(或未答)：${wrong} 題 | 得分率：${rate}%`;
         
         if (isReviewMode) {
-            document.getElementById('score-board-title').textContent = "🔥 錯題特訓模式：結算成績";
+            document.getElementById('score-board-title').textContent = "🔥 錯題特訓重測完成";
         } else {
             document.getElementById('score-board-title').textContent = "🎉 測驗完成！成績結算";
         }
 
-        // 顯示成績單卡片
-        document.getElementById('score-board-card').classList.remove('hidden');
+        // 核心切換邏輯
+        document.getElementById('exam-card').classList.add('hidden'); // 徹底隱藏題目卷
+        document.getElementById('score-screen').classList.remove('hidden'); // 只顯示分數與返回按鈕
 
-        // 自動平滑滾動到最上方，讓使用者第一時間看到分數
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -568,8 +577,8 @@
 
     function backToSetup() {
         document.getElementById('exam-card').classList.add('hidden');
-        document.getElementById('score-board-card').classList.add('hidden'); // 隱藏分數
-        document.getElementById('setup-card').classList.remove('hidden');
+        document.getElementById('score-screen').classList.add('hidden'); 
+        document.getElementById('setup-card').classList.remove('hidden'); // 顯示測驗首頁
     }
 
     function saveCurrentState() {
@@ -607,13 +616,13 @@
             const hasReviewTitle = currentExamQuestions.every(q => wrongQuestionPool.has(q.uniqueId));
             isReviewMode = (setObj.mode !== 'all' && setObj.mode !== 'paper1' && setObj.mode !== 'paper2' && hasReviewTitle);
             
-            renderExam();
-            
-            // 如果儲存的進度已經改完考卷或全部做完，自動把分數呈現出來
+            // 如果儲存的進度已經交卷過或練習寫完了，直接切到分數畫面
             const isGraded = currentExamQuestions.some(q => q.isGraded);
             const answeredCount = currentExamQuestions.filter(item => item.userAns !== null).length;
             if (isGraded || (setObj.feedback === 'instant' && answeredCount === currentExamQuestions.length)) {
                 calculateAndShowScore();
+            } else {
+                renderExam();
             }
         }
     }
