@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公共工程品管班 - 四合一終極線上模擬考系統</title>
+    <title>公共工程品管班考古題系統</title>
     <style>
         :root {
             --primary: #2563eb;
@@ -257,8 +257,8 @@
 
 <div class="container">
     <div class="header">
-        <h1>公共工程品管班 模擬考系統</h1>
-        <p style="color: var(--text-muted);">客製化範圍篩選：200題混合抽、考古題1、考古題2</p>
+        <h1>公共工程品管班考古題系統</h1>
+        <p style="color: var(--text-muted);">6/13考試加油！</p>
     </div>
 
     <div class="score-board hidden" id="score-board-card">
@@ -275,8 +275,8 @@
                 <label for="mode-select">選擇測驗範圍</label>
                 <select id="mode-select">
                     <option value="all">全部 200 題混合隨機抽題</option>
-                    <option value="paper1">僅測驗【考古題 1】</option>
-                    <option value="paper2">僅測驗【考古題 2】</option>
+                    <option value="paper1">考古題 1</option>
+                    <option value="paper2">考古題 2</option>
                 </select>
             </div>
             <div class="form-group">
@@ -442,7 +442,6 @@
                 </div>
                 <div class="analysis-box hidden" id="analysis-${idx}">
                     <strong>標準答案：【${q.ans.trim().toUpperCase()}】</strong><br>
-                    <span style="color:var(--text-muted);">說明：請對照公共工程品質管理教材。</span>
                 </div>
             `;
             container.appendChild(qEl);
